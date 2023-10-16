@@ -13,6 +13,7 @@ class Student {
     this.email = email;
     this.enrollmentDate = enrollmentDate;
     this.dateOfBirth = dateOfBirth;
+    this.isGraduated = false;
   }
 }
 
@@ -21,17 +22,18 @@ class Faculty {
     this.name = name;
     this.abbreviation = abbreviation;
     this.studyField = studyField;
-    this.students = [];
+    this.enrolledStudents = [];
+    this.graduatedStudents = [];
   }
 
   addStudent(student) {
-    this.students.push(student);
+    this.enrolledStudents.push(student);
   }
 
-  graduateStudent(studentEmail) {
-    this.students = this.students.filter(
-      (student) => student.email !== studentEmail
-    );
+  graduateStudent(student) {
+    if (this.enrolledStudents.includes(student)) {
+      this.graduatedStudents.push(student);
+    }
   }
 }
 
@@ -83,7 +85,7 @@ class University {
 
   displayGraduates(faculty) {
     console.log(`Graduates from ${faculty.name} (${faculty.abbreviation}):`);
-    for (const student of faculty.students) {
+    for (const student of faculty.graduatedStudents) {
       console.log(
         `${student.firstname} ${student.lastname} (${student.email})`
       );

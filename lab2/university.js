@@ -76,7 +76,7 @@ class University {
     console.log(
       `Enrolled students in ${faculty.name} (${faculty.abbreviation}):`
     );
-    for (const student of faculty.students) {
+    for (const student of faculty.enrolledStudents) {
       console.log(
         `${student.firstname} ${student.lastname} (${student.email})`
       );

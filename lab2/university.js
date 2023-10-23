@@ -30,9 +30,15 @@ class Faculty {
     this.enrolledStudents.push(student);
   }
 
-  graduateStudent(student) {
-    if (this.enrolledStudents.includes(student)) {
-      this.graduatedStudents.push(student);
+  graduateStudent(studentEmail) {
+    const studentToGraduate = this.enrolledStudents.find(
+      (student) => student.email === studentEmail
+    );
+    if (studentToGraduate) {
+      this.graduatedStudents.push(studentToGraduate);
+      this.enrolledStudents = this.enrolledStudents.filter(
+        (student) => student.email !== studentEmail
+      );
     }
   }
 }
@@ -49,7 +55,11 @@ class University {
 
   findFacultyByStudentEmail(studentEmail) {
     for (const faculty of this.faculties) {
-      if (faculty.students.some((student) => student.email === studentEmail)) {
+      if (
+        faculty.enrolledStudents.some(
+          (student) => student.email === studentEmail
+        )
+      ) {
         return faculty;
       }
     }
@@ -180,10 +190,18 @@ rl.on("line", (input) => {
       rl.question("Student Email: ", (studentEmail) => {
         const faculty = university.findFacultyByStudentEmail(studentEmail);
         if (faculty) {
-          faculty.graduateStudent(studentEmail);
-          console.log(
-            `Student with email ${studentEmail} has graduated from ${faculty.name} (${faculty.abbreviation}).`
-          );
+          if (
+            faculty.enrolledStudents.some(
+              (student) => student.email === studentEmail
+            )
+          ) {
+            faculty.graduateStudent(studentEmail);
+            console.log(
+              `Student with email ${studentEmail} has graduated from ${faculty.name} (${faculty.abbreviation}).`
+            );
+          } else {
+            console.log("Student not found in the selected faculty.");
+          }
         } else {
           console.log("Student not found in any faculty.");
         }

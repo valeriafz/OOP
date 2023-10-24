@@ -24,7 +24,6 @@ class File {
     }
   }
 }
-
 class ImageFile extends File {
   constructor(filename, extension, createdTime, updatedTime, imageSize) {
     super(filename, extension, createdTime, updatedTime);
@@ -91,13 +90,13 @@ class Snapshot {
     this.files = [];
   }
 
+  addFile(file) {
+    this.files.push(file);
+  }
+
   commit() {
     this.snapshotTime = new Date();
     console.log(`Created snapshot at: ${this.snapshotTime}`);
-  }
-
-  addFile(file) {
-    this.files.push(file);
   }
 
   info(filename) {
@@ -113,9 +112,10 @@ class Snapshot {
 
   status() {
     console.log(`Snapshot time: ${this.snapshotTime}`);
+
     for (const file of this.files) {
-      const statusMessage = file.status(this.snapshotTime);
-      console.log(statusMessage);
+      const status = file.status(this.snapshotTime);
+      console.log(status);
     }
   }
 }
@@ -198,8 +198,6 @@ fs.watch(directoryToWatch, (eventType, filename) => {
   }
 });
 
-updateFileList(directoryToWatch);
-
 function showMenu() {
   console.log("Git-Like Menu:");
   console.log("1. Commit");
@@ -216,7 +214,7 @@ function showMenu() {
         showMenu();
       });
     } else if (option === "3") {
-      snapshot.status(); // Print status immediately
+      snapshot.status();
       showMenu();
     } else if (option === "4") {
       rl.close();

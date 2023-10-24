@@ -89,6 +89,7 @@ class Snapshot {
   constructor() {
     this.snapshotTime = new Date();
     this.files = [];
+    this.statusMessages = [];
   }
 
   commit() {
@@ -112,9 +113,9 @@ class Snapshot {
   }
 
   status() {
-    console.log(`Snapshot time: ${this.snapshotTime}`);
+    this.statusMessages = [];
     for (const file of this.files) {
-      console.log(file.status(this.snapshotTime));
+      this.statusMessages.push(file.status(this.snapshotTime)); // Collect status messages
     }
   }
 }

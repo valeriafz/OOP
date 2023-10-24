@@ -18,9 +18,9 @@ class File {
 
   status(snapshotTime) {
     if (this.updatedTime > snapshotTime) {
-      console.log(`${this.filename}.${this.extension} - Changed`);
+      return `File: ${this.filename}.${this.extension} - Changed`;
     } else {
-      console.log(`${this.filename}.${this.extension} - No change`);
+      return `File: ${this.filename}.${this.extension} - No change`;
     }
   }
 }
@@ -101,7 +101,9 @@ class Snapshot {
   }
 
   info(filename) {
-    const file = this.files.find((f) => f.filename === filename);
+    const file = this.files.find(
+      (f) => f.filename.toLowerCase() === filename.toLowerCase()
+    );
     if (file) {
       file.info();
     } else {
@@ -112,7 +114,7 @@ class Snapshot {
   status() {
     console.log(`Snapshot time: ${this.snapshotTime}`);
     for (const file of this.files) {
-      file.status(this.snapshotTime);
+      console.log(file.status(this.snapshotTime));
     }
   }
 }
@@ -132,6 +134,7 @@ function updateFileList(dirPath) {
     }
 
     for (const file of files) {
+      console.log(file);
       const filePath = path.join(dirPath, file);
       const stats = fs.statSync(filePath);
       const createdTime = stats.birthtime;
@@ -140,7 +143,6 @@ function updateFileList(dirPath) {
       const [filename, extension] = file.split(".");
       let fileObj;
 
-      // Determine the file type and create the appropriate object
       if (["png", "jpg"].includes(extension)) {
         fileObj = new ImageFile(
           filename,
@@ -180,14 +182,18 @@ function updateFileList(dirPath) {
   });
 }
 
-// Set the directory path to monitor (change this to your lab3 folder)
-const directoryToWatch = ".";
+const directoryToWatch = "."; // Set the directory path to monitor (change this to your lab3 folder)
 
-// Watch for changes in the directory
+let isUpdating = false; // Flag to prevent multiple updates in a short time
+
 fs.watch(directoryToWatch, (eventType, filename) => {
-  if (filename) {
+  if (filename && !isUpdating) {
+    isUpdating = true; // Set the flag to prevent multiple updates
     console.log(`Change detected: ${filename}`);
     updateFileList(directoryToWatch);
+    setTimeout(() => {
+      isUpdating = false; // Reset the flag after a short delay
+    }, 1000); // Adjust the delay time as needed
   }
 });
 

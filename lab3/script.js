@@ -89,7 +89,6 @@ class Snapshot {
   constructor() {
     this.snapshotTime = new Date();
     this.files = [];
-    this.statusMessages = [];
   }
 
   commit() {
@@ -113,9 +112,10 @@ class Snapshot {
   }
 
   status() {
-    this.statusMessages = [];
+    console.log(`Snapshot time: ${this.snapshotTime}`);
     for (const file of this.files) {
-      this.statusMessages.push(file.status(this.snapshotTime)); // Collect status messages
+      const statusMessage = file.status(this.snapshotTime);
+      console.log(statusMessage);
     }
   }
 }
@@ -216,7 +216,7 @@ function showMenu() {
         showMenu();
       });
     } else if (option === "3") {
-      snapshot.status();
+      snapshot.status(); // Print status immediately
       showMenu();
     } else if (option === "4") {
       rl.close();

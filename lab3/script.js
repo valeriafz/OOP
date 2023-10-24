@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const readline = require("readline");
 
 class File {
   constructor(filename, extension, createdTime, updatedTime) {
@@ -24,10 +25,70 @@ class File {
   }
 }
 
+class ImageFile extends File {
+  constructor(filename, extension, createdTime, updatedTime, imageSize) {
+    super(filename, extension, createdTime, updatedTime);
+    this.imageSize = imageSize;
+  }
+
+  info() {
+    super.info();
+    console.log(`Image Size: ${this.imageSize}`);
+  }
+}
+
+class TextFile extends File {
+  constructor(
+    filename,
+    extension,
+    createdTime,
+    updatedTime,
+    lineCount,
+    wordCount,
+    charCount
+  ) {
+    super(filename, extension, createdTime, updatedTime);
+    this.lineCount = lineCount;
+    this.wordCount = wordCount;
+    this.charCount = charCount;
+  }
+
+  info() {
+    super.info();
+    console.log(`Line Count: ${this.lineCount}`);
+    console.log(`Word Count: ${this.wordCount}`);
+    console.log(`Character Count: ${this.charCount}`);
+  }
+}
+
+class ProgramFile extends File {
+  constructor(
+    filename,
+    extension,
+    createdTime,
+    updatedTime,
+    lineCount,
+    classCount,
+    methodCount
+  ) {
+    super(filename, extension, createdTime, updatedTime);
+    this.lineCount = lineCount;
+    this.classCount = classCount;
+    this.methodCount = methodCount;
+  }
+
+  info() {
+    super.info();
+    console.log(`Line Count: ${this.lineCount}`);
+    console.log(`Class Count: ${this.classCount}`);
+    console.log(`Method Count: ${this.methodCount}`);
+  }
+}
+
 class Snapshot {
   constructor() {
     this.snapshotTime = new Date();
-    this.files = {};
+    this.files = [];
   }
 
   commit() {
@@ -36,11 +97,11 @@ class Snapshot {
   }
 
   addFile(file) {
-    this.files[file.filename] = file;
+    this.files.push(file);
   }
 
   info(filename) {
-    const file = this.files[filename];
+    const file = this.files.find((f) => f.filename === filename);
     if (file) {
       file.info();
     } else {
@@ -50,12 +111,16 @@ class Snapshot {
 
   status() {
     console.log(`Snapshot time: ${this.snapshotTime}`);
-    for (const filename in this.files) {
-      const file = this.files[filename];
+    for (const file of this.files) {
       file.status(this.snapshotTime);
     }
   }
 }
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
 
 const snapshot = new Snapshot();
 
@@ -73,7 +138,41 @@ function updateFileList(dirPath) {
       const updatedTime = stats.mtime;
 
       const [filename, extension] = file.split(".");
-      const fileObj = new File(filename, extension, createdTime, updatedTime);
+      let fileObj;
+
+      // Determine the file type and create the appropriate object
+      if (["png", "jpg"].includes(extension)) {
+        fileObj = new ImageFile(
+          filename,
+          extension,
+          createdTime,
+          updatedTime,
+          "1024x860"
+        );
+      } else if (extension === "txt") {
+        fileObj = new TextFile(
+          filename,
+          extension,
+          createdTime,
+          updatedTime,
+          100,
+          500,
+          3000
+        );
+      } else if (["py", "java"].includes(extension)) {
+        fileObj = new ProgramFile(
+          filename,
+          extension,
+          createdTime,
+          updatedTime,
+          200,
+          10,
+          30
+        );
+      } else {
+        fileObj = new File(filename, extension, createdTime, updatedTime);
+      }
+
       snapshot.addFile(fileObj);
     }
 
@@ -82,7 +181,7 @@ function updateFileList(dirPath) {
 }
 
 // Set the directory path to monitor (change this to your lab3 folder)
-const directoryToWatch = "./lab3";
+const directoryToWatch = ".";
 
 // Watch for changes in the directory
 fs.watch(directoryToWatch, (eventType, filename) => {
@@ -93,3 +192,32 @@ fs.watch(directoryToWatch, (eventType, filename) => {
 });
 
 updateFileList(directoryToWatch);
+
+function showMenu() {
+  console.log("Git-Like Menu:");
+  console.log("1. Commit");
+  console.log("2. Info");
+  console.log("3. Status");
+  console.log("4. Exit");
+  rl.question("Select an option: ", (option) => {
+    if (option === "1") {
+      snapshot.commit();
+      showMenu();
+    } else if (option === "2") {
+      rl.question("Enter filename: ", (filename) => {
+        snapshot.info(filename);
+        showMenu();
+      });
+    } else if (option === "3") {
+      snapshot.status();
+      showMenu();
+    } else if (option === "4") {
+      rl.close();
+    } else {
+      console.log("Invalid option. Please select a valid option.");
+      showMenu();
+    }
+  });
+}
+
+showMenu();

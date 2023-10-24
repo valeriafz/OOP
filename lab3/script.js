@@ -18,7 +18,7 @@ class File {
 
   status(snapshotTime) {
     if (this.updatedTime > snapshotTime) {
-      return `File: ${this.filename}.${this.extension} - Changed`;
+      return `File: ${this.filename}.${this.extension} - Changed since last snapshot`;
     } else {
       return `File: ${this.filename}.${this.extension} - No change`;
     }
@@ -86,7 +86,7 @@ class ProgramFile extends File {
 
 class Snapshot {
   constructor() {
-    this.snapshotTime = new Date();
+    this.snapshotTime = null;
     this.files = [];
   }
 
@@ -100,9 +100,12 @@ class Snapshot {
   }
 
   info(filename) {
-    const file = this.files.find(
-      (f) => f.filename.toLowerCase() === filename.toLowerCase()
-    );
+    console.log("Searching for:", filename);
+    const file = this.files.find((f) => {
+      console.log("Comparing to:", f.filename);
+      return f.filename.toLowerCase() === filename.toLowerCase();
+    });
+
     if (file) {
       file.info();
     } else {
@@ -111,11 +114,16 @@ class Snapshot {
   }
 
   status() {
-    console.log(`Snapshot time: ${this.snapshotTime}`);
-
-    for (const file of this.files) {
-      const status = file.status(this.snapshotTime);
-      console.log(status);
+    if (this.snapshotTime) {
+      console.log(`Snapshot time: ${this.snapshotTime}`);
+      for (const file of this.files) {
+        const status = file.status(this.snapshotTime);
+        console.log(status);
+      }
+    } else {
+      console.log(
+        "No snapshot has been created. Please use option 1 (commit) first."
+      );
     }
   }
 }
@@ -135,56 +143,27 @@ function updateFileList(dirPath) {
     }
 
     for (const file of files) {
-      console.log(file);
       const filePath = path.join(dirPath, file);
       const stats = fs.statSync(filePath);
       const createdTime = stats.birthtime;
       const updatedTime = stats.mtime;
+      const filename = path.basename(file, path.extname(file));
+      const extension = path.extname(file).slice(1);
 
-      const [filename, extension] = file.split(".");
-      let fileObj;
-
-      if (["png", "jpg"].includes(extension)) {
-        fileObj = new ImageFile(
-          filename,
-          extension,
-          createdTime,
-          updatedTime,
-          "1024x860"
-        );
+      if (["png", "jpg", "gif"].includes(extension)) {
+        fileObj = new ImageFile(filename, extension, createdTime, updatedTime);
       } else if (extension === "txt") {
-        fileObj = new TextFile(
-          filename,
-          extension,
-          createdTime,
-          updatedTime,
-          100,
-          500,
-          3000
-        );
-      } else if (["py", "java"].includes(extension)) {
-        fileObj = new ProgramFile(
-          filename,
-          extension,
-          createdTime,
-          updatedTime,
-          200,
-          10,
-          30
-        );
+        fileObj = new TextFile(filename, extension, createdTime, updatedTime);
       } else {
         fileObj = new File(filename, extension, createdTime, updatedTime);
       }
-
       snapshot.addFile(fileObj);
     }
-
-    snapshot.status();
   });
+  snapshot.status();
 }
 
-const directoryToWatch = "."; // Set the directory path to monitor (change this to your lab3 folder)
-
+const directoryToWatch = ".";
 let isUpdating = false; // Flag to prevent multiple updates in a short time
 
 fs.watch(directoryToWatch, (eventType, filename) => {
@@ -193,10 +172,12 @@ fs.watch(directoryToWatch, (eventType, filename) => {
     console.log(`Change detected: ${filename}`);
     updateFileList(directoryToWatch);
     setTimeout(() => {
-      isUpdating = false; // Reset the flag after a short delay
-    }, 1000); // Adjust the delay time as needed
+      isUpdating = false;
+    }, 1000);
   }
 });
+
+updateFileList(directoryToWatch);
 
 function showMenu() {
   console.log("Git-Like Menu:");
@@ -204,6 +185,7 @@ function showMenu() {
   console.log("2. Info");
   console.log("3. Status");
   console.log("4. Exit");
+
   rl.question("Select an option: ", (option) => {
     if (option === "1") {
       snapshot.commit();
@@ -224,5 +206,4 @@ function showMenu() {
     }
   });
 }
-
 showMenu();

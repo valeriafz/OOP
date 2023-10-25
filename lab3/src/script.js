@@ -163,7 +163,7 @@ function updateFileList(dirPath) {
   snapshot.status();
 }
 
-const directoryToWatch = ".";
+const directoryToWatch = "./files";
 let isUpdating = false; // Flag to prevent multiple updates in a short time
 
 fs.watch(directoryToWatch, (eventType, filename) => {

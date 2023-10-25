@@ -12,8 +12,8 @@ class File {
 
   info() {
     console.log(`File: ${this.filename}.${this.extension}`);
-    console.log(`Created: ${this.createdTime}`);
-    console.log(`Updated: ${this.updatedTime}`);
+    console.log(`Created: ${this.createdTime.toUTCString()}`);
+    console.log(`Updated: ${this.updatedTime.toUTCString()}`);
   }
 
   status(snapshotTime) {
@@ -32,7 +32,9 @@ class ImageFile extends File {
 
   info() {
     super.info();
-    console.log(`Image Size: ${this.imageSize}`);
+    if (this.imageSize !== undefined) {
+      console.log(`Image Size: ${this.imageSize}`);
+    }
   }
 }
 
@@ -102,8 +104,11 @@ class Snapshot {
   info(filename) {
     console.log("Searching for:", filename);
     const file = this.files.find((f) => {
-      console.log("Comparing to:", f.filename);
-      return f.filename.toLowerCase() === filename.toLowerCase();
+      return (
+        f.filename.toLowerCase() === filename.toLowerCase() ||
+        path.basename(f.filename, path.extname(f.filename)).toLowerCase() ===
+          filename.toLowerCase()
+      );
     });
 
     if (file) {
@@ -142,28 +147,58 @@ function updateFileList(dirPath) {
       return;
     }
 
+    console.log("Files in directory:", files);
+
     for (const file of files) {
       const filePath = path.join(dirPath, file);
       const stats = fs.statSync(filePath);
-      const createdTime = stats.birthtime;
-      const updatedTime = stats.mtime;
+      const createdTime = stats.mtime;
+      const updatedTime = stats.birthtime;
       const filename = path.basename(file, path.extname(file));
       const extension = path.extname(file).slice(1);
 
       if (["png", "jpg", "gif"].includes(extension)) {
-        fileObj = new ImageFile(filename, extension, createdTime, updatedTime);
+        const imageSize = getImageSize(filePath);
+        fileObj = new ImageFile(
+          filename,
+          extension,
+          createdTime,
+          updatedTime,
+          imageSize
+        );
       } else if (extension === "txt") {
-        fileObj = new TextFile(filename, extension, createdTime, updatedTime);
+        const textStats = getTextFileStats(filePath);
+        fileObj = new TextFile(
+          filename,
+          extension,
+          createdTime,
+          updatedTime,
+          textStats.lineCount,
+          textStats.wordCount,
+          textStats.charCount
+        );
+      } else if (["py", "java", "js"].includes(extension)) {
+        const programStats = getProgramFileStats(filePath, extension);
+        fileObj = new ProgramFile(
+          filename,
+          extension,
+          createdTime,
+          updatedTime,
+          programStats.lineCount,
+          programStats.classCount,
+          programStats.methodCount
+        );
       } else {
         fileObj = new File(filename, extension, createdTime, updatedTime);
       }
+
       snapshot.addFile(fileObj);
     }
   });
   snapshot.status();
 }
 
-const directoryToWatch = "./files";
+const directoryToWatch = "../files";
 let isUpdating = false; // Flag to prevent multiple updates in a short time
 
 fs.watch(directoryToWatch, (eventType, filename) => {

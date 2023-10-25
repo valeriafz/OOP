@@ -141,6 +141,120 @@ const rl = readline.createInterface({
 const snapshot = new Snapshot();
 
 function updateFileList(dirPath) {
+  // Function to get image size
+  function getImageSize(filePath) {
+    // Implement logic to get image size (e.g., using 'image-size' library)
+    // For example, you can use the 'image-size' library:
+    const sizeOf = require("image-size");
+    const dimensions = sizeOf(filePath);
+    return `${dimensions.width}x${dimensions.height} pixels`;
+  }
+
+  // Function to get text file statistics (line count, word count, character count)
+  function getTextFileStats(filePath) {
+    const content = fs.readFileSync(filePath, "utf8");
+    const lines = content.split("\n");
+    const words = content.split(/\s+/).filter(Boolean);
+    const charCount = content.length;
+
+    return {
+      lineCount: lines.length,
+      wordCount: words.length,
+      charCount: charCount,
+    };
+  }
+
+  // Define the getProgramFileStats function
+  function getProgramFileStats(filePath, extension) {
+    if (extension === "py") {
+      // Implement logic to count lines, classes, methods for Python files
+      const content = fs.readFileSync(filePath, "utf8");
+      const lines = content.split("\n");
+      let classCount = 0;
+      let methodCount = 0;
+      let insideClass = false;
+
+      for (const line of lines) {
+        if (line.trim().startsWith("class ")) {
+          classCount++;
+          insideClass = true;
+        } else if (insideClass && line.trim().startsWith("def ")) {
+          methodCount++;
+        } else if (insideClass && line.trim() === "") {
+          insideClass = false;
+        }
+      }
+
+      return {
+        lineCount: lines.length,
+        classCount: classCount,
+        methodCount: methodCount,
+      };
+    } else if (extension === "java") {
+      // Implement logic to count classes and methods in Java code
+      const content = fs.readFileSync(filePath, "utf8");
+      const lines = content.split("\n");
+      let classCount = 0;
+      let methodCount = 0;
+      let insideClass = false;
+
+      for (const line of lines) {
+        if (line.trim().startsWith("class ")) {
+          classCount++;
+          insideClass = true;
+        } else if (
+          insideClass &&
+          (line.trim().startsWith("public ") ||
+            line.trim().startsWith("private "))
+        ) {
+          methodCount++;
+        } else if (insideClass && line.trim() === "}") {
+          insideClass = false;
+        }
+      }
+
+      return {
+        lineCount: lines.length,
+        classCount: classCount,
+        methodCount: methodCount,
+      };
+    } else if (extension === "js") {
+      // Implement logic to count lines, classes, and methods for JavaScript files
+      const content = fs.readFileSync(filePath, "utf8");
+      const lines = content.split("\n");
+      let classCount = 0;
+      let methodCount = 0;
+      let insideClass = false;
+
+      for (const line of lines) {
+        if (line.trim().startsWith("class ")) {
+          classCount++;
+          insideClass = true;
+        } else if (
+          insideClass &&
+          (line.trim().startsWith("constructor(") ||
+            line.trim().startsWith("function "))
+        ) {
+          methodCount++;
+        } else if (insideClass && line.trim() === "}") {
+          insideClass = false;
+        }
+      }
+
+      return {
+        lineCount: lines.length,
+        classCount: classCount,
+        methodCount: methodCount,
+      };
+    }
+
+    return {
+      lineCount: 0,
+      classCount: 0,
+      methodCount: 0,
+    };
+  }
+
   fs.readdir(dirPath, (err, files) => {
     if (err) {
       console.error(err);

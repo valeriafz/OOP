@@ -24,6 +24,7 @@ class File {
     }
   }
 }
+
 class ImageFile extends File {
   constructor(filename, extension, createdTime, updatedTime, imageSize) {
     super(filename, extension, createdTime, updatedTime);
@@ -90,6 +91,7 @@ class Snapshot {
   constructor() {
     this.snapshotTime = null;
     this.files = [];
+    this.snapshotFiles = [];
   }
 
   addFile(file) {
@@ -98,6 +100,7 @@ class Snapshot {
 
   commit() {
     this.snapshotTime = new Date();
+    this.snapshotFiles = fs.readdirSync(directoryToWatch);
     console.log(`Created snapshot at: ${this.snapshotTime}`);
   }
 
@@ -118,17 +121,79 @@ class Snapshot {
     }
   }
 
-  status() {
-    if (this.snapshotTime) {
-      console.log(`Snapshot time: ${this.snapshotTime}`);
-      for (const file of this.files) {
-        const status = file.status(this.snapshotTime);
-        console.log(status);
+  status(isUserSelectedOption3) {
+    if (!this.snapshotTime && !isUserSelectedOption3) {
+      if (isUserSelectedOption3) {
+        console.log(
+          "No snapshot has been created. Please use option 1 (commit) first."
+        );
       }
     } else {
-      console.log(
-        "No snapshot has been created. Please use option 1 (commit) first."
+      const currentFiles = fs.readdirSync(directoryToWatch);
+      if (!isUserSelectedOption3) {
+        for (const file of this.files) {
+          console.log(`File: ${file.filename}.${file.extension} - No change`);
+        }
+        for (const currentFile of currentFiles) {
+          if (!this.snapshotFiles.includes(currentFile)) {
+            console.log(
+              `File: ${path.basename(currentFile)} - Added since last snapshot`
+            );
+          }
+        }
+      } else {
+        if (currentFiles.length === 0) {
+          console.log("No files in the directory.");
+        } else {
+          for (const file of this.files) {
+            const currentFilePath = path.join(
+              directoryToWatch,
+              file.filename + "." + file.extension
+            );
+            if (currentFiles.includes(file.filename + "." + file.extension)) {
+              const currentStats = fs.statSync(currentFilePath);
+              if (currentStats.mtime > this.snapshotTime) {
+                console.log(
+                  `File: ${file.filename}.${file.extension} - Changed since last snapshot`
+                );
+              } else {
+                console.log(
+                  `File: ${file.filename}.${file.extension} - No change`
+                );
+              }
+            } else {
+              console.log(
+                `File: ${file.filename}.${file.extension} - Deleted since last snapshot`
+              );
+            }
+          }
+          for (const currentFile of currentFiles) {
+            if (!this.snapshotFiles.includes(currentFile)) {
+              console.log(
+                `File: ${path.basename(
+                  currentFile
+                )} - Added since last snapshot`
+              );
+            }
+          }
+        }
+      }
+    }
+  }
+
+  checkFileStatus(filename, currentFiles, snapshotTime) {
+    const currentFile = currentFiles.find((file) => file === filename);
+    if (currentFile) {
+      const currentStats = fs.statSync(
+        path.join(directoryToWatch, currentFile)
       );
+      if (currentStats.mtime > snapshotTime) {
+        return `File: ${filename} - Changed since last snapshot`;
+      } else {
+        return `File: ${filename} - No change`;
+      }
+    } else {
+      return `File: ${filename} - Added since last snapshot`;
     }
   }
 }
@@ -141,16 +206,12 @@ const rl = readline.createInterface({
 const snapshot = new Snapshot();
 
 function updateFileList(dirPath) {
-  // Function to get image size
   function getImageSize(filePath) {
-    // Implement logic to get image size (e.g., using 'image-size' library)
-    // For example, you can use the 'image-size' library:
     const sizeOf = require("image-size");
     const dimensions = sizeOf(filePath);
     return `${dimensions.width}x${dimensions.height} pixels`;
   }
 
-  // Function to get text file statistics (line count, word count, character count)
   function getTextFileStats(filePath) {
     const content = fs.readFileSync(filePath, "utf8");
     const lines = content.split("\n");
@@ -164,10 +225,8 @@ function updateFileList(dirPath) {
     };
   }
 
-  // Define the getProgramFileStats function
   function getProgramFileStats(filePath, extension) {
     if (extension === "py") {
-      // Implement logic to count lines, classes, methods for Python files
       const content = fs.readFileSync(filePath, "utf8");
       const lines = content.split("\n");
       let classCount = 0;
@@ -191,7 +250,6 @@ function updateFileList(dirPath) {
         methodCount: methodCount,
       };
     } else if (extension === "java") {
-      // Implement logic to count classes and methods in Java code
       const content = fs.readFileSync(filePath, "utf8");
       const lines = content.split("\n");
       let classCount = 0;
@@ -219,7 +277,6 @@ function updateFileList(dirPath) {
         methodCount: methodCount,
       };
     } else if (extension === "js") {
-      // Implement logic to count lines, classes, and methods for JavaScript files
       const content = fs.readFileSync(filePath, "utf8");
       const lines = content.split("\n");
       let classCount = 0;
@@ -261,13 +318,11 @@ function updateFileList(dirPath) {
       return;
     }
 
-    console.log("Files in directory:", files);
-
     for (const file of files) {
       const filePath = path.join(dirPath, file);
       const stats = fs.statSync(filePath);
-      const createdTime = stats.mtime;
-      const updatedTime = stats.birthtime;
+      const createdTime = stats.birthtime;
+      const updatedTime = stats.mtime;
       const filename = path.basename(file, path.extname(file));
       const extension = path.extname(file).slice(1);
 
@@ -309,26 +364,27 @@ function updateFileList(dirPath) {
       snapshot.addFile(fileObj);
     }
   });
-  snapshot.status();
+  //snapshot.status();
 }
 
 const directoryToWatch = "../files";
-let isUpdating = false; // Flag to prevent multiple updates in a short time
+let isUpdating = false; //  prevent multiple updates in a short time
 
 fs.watch(directoryToWatch, (eventType, filename) => {
   if (filename && !isUpdating) {
-    isUpdating = true; // Set the flag to prevent multiple updates
-    console.log(`Change detected: ${filename}`);
-    updateFileList(directoryToWatch);
+    isUpdating = true;
+    //console.log(`Change detected: ${filename}`);
     setTimeout(() => {
+      updateFileList(directoryToWatch);
       isUpdating = false;
     }, 1000);
   }
 });
 
-updateFileList(directoryToWatch);
+// updateFileList(directoryToWatch);
 
 function showMenu() {
+  let isUserSelectedOption3 = false;
   console.log("Git-Like Menu:");
   console.log("1. Commit");
   console.log("2. Info");
@@ -340,12 +396,20 @@ function showMenu() {
       snapshot.commit();
       showMenu();
     } else if (option === "2") {
+      console.log("Files in directory:", fs.readdirSync(directoryToWatch));
       rl.question("Enter filename: ", (filename) => {
         snapshot.info(filename);
         showMenu();
       });
     } else if (option === "3") {
-      snapshot.status();
+      // if (isUpdating) {
+      //   isUpdating = false; // Enable automatic updates for "Status" option
+      //   updateFileList(directoryToWatch);
+      // }
+      // snapshot.status();
+      // showMenu();
+      isUserSelectedOption3 = true; // Set the variable when user selects option 3
+      snapshot.status(isUserSelectedOption3);
       showMenu();
     } else if (option === "4") {
       rl.close();
@@ -355,4 +419,5 @@ function showMenu() {
     }
   });
 }
+
 showMenu();

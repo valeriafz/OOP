@@ -98,10 +98,11 @@ class Snapshot {
     this.files.push(file);
   }
 
-  commit() {
+  commit(directoryToWatch) {
     this.snapshotTime = new Date();
     this.snapshotFiles = fs.readdirSync(directoryToWatch);
     console.log(`Created snapshot at: ${this.snapshotTime}`);
+    updateFileList(directoryToWatch);
   }
 
   info(filename) {
@@ -205,126 +206,143 @@ const rl = readline.createInterface({
 
 const snapshot = new Snapshot();
 
-function updateFileList(dirPath) {
+async function updateFileList(dirPath) {
   function getImageSize(filePath) {
     const sizeOf = require("image-size");
     const dimensions = sizeOf(filePath);
     return `${dimensions.width}x${dimensions.height} pixels`;
   }
 
-  function getTextFileStats(filePath) {
-    const content = fs.readFileSync(filePath, "utf8");
-    const lines = content.split("\n");
-    const words = content.split(/\s+/).filter(Boolean);
-    const charCount = content.length;
+  async function getTextFileStats(filePath) {
+    try {
+      const content = await fs.promises.readFile(filePath, "utf8");
 
-    return {
-      lineCount: lines.length,
-      wordCount: words.length,
-      charCount: charCount,
-    };
-  }
-
-  function getProgramFileStats(filePath, extension) {
-    if (extension === "py") {
-      const content = fs.readFileSync(filePath, "utf8");
       const lines = content.split("\n");
-      let classCount = 0;
-      let methodCount = 0;
-      let insideClass = false;
-
-      for (const line of lines) {
-        if (line.trim().startsWith("class ")) {
-          classCount++;
-          insideClass = true;
-        } else if (insideClass && line.trim().startsWith("def ")) {
-          methodCount++;
-        } else if (insideClass && line.trim() === "") {
-          insideClass = false;
-        }
-      }
+      const words = content.split(/\s+/).filter(Boolean);
+      const charCount = content.length;
 
       return {
         lineCount: lines.length,
-        classCount: classCount,
-        methodCount: methodCount,
+        wordCount: words.length,
+        charCount: charCount,
       };
-    } else if (extension === "java") {
-      const content = fs.readFileSync(filePath, "utf8");
-      const lines = content.split("\n");
-      let classCount = 0;
-      let methodCount = 0;
-      let insideClass = false;
-
-      for (const line of lines) {
-        if (line.trim().startsWith("class ")) {
-          classCount++;
-          insideClass = true;
-        } else if (
-          insideClass &&
-          (line.trim().startsWith("public ") ||
-            line.trim().startsWith("private "))
-        ) {
-          methodCount++;
-        } else if (insideClass && line.trim() === "}") {
-          insideClass = false;
-        }
-      }
-
+    } catch (error) {
+      console.error(`Error reading file: ${filePath}`, error);
       return {
-        lineCount: lines.length,
-        classCount: classCount,
-        methodCount: methodCount,
-      };
-    } else if (extension === "js") {
-      const content = fs.readFileSync(filePath, "utf8");
-      const lines = content.split("\n");
-      let classCount = 0;
-      let methodCount = 0;
-      let insideClass = false;
-
-      for (const line of lines) {
-        if (line.trim().startsWith("class ")) {
-          classCount++;
-          insideClass = true;
-        } else if (
-          insideClass &&
-          (line.trim().startsWith("constructor(") ||
-            line.trim().startsWith("function "))
-        ) {
-          methodCount++;
-        } else if (insideClass && line.trim() === "}") {
-          insideClass = false;
-        }
-      }
-
-      return {
-        lineCount: lines.length,
-        classCount: classCount,
-        methodCount: methodCount,
+        lineCount: 0,
+        wordCount: 0,
+        charCount: 0,
       };
     }
-
-    return {
-      lineCount: 0,
-      classCount: 0,
-      methodCount: 0,
-    };
   }
 
-  fs.readdir(dirPath, (err, files) => {
-    if (err) {
-      console.error(err);
-      return;
+  async function getProgramFileStats(filePath, extension) {
+    try {
+      const content = await fs.promises.readFile(filePath, "utf8");
+
+      if (extension === "py") {
+        const lines = content.split("\n");
+        let classCount = 0;
+        let methodCount = 0;
+        let insideClass = false;
+
+        for (const line of lines) {
+          if (line.trim().startsWith("class ")) {
+            classCount++;
+            insideClass = true;
+          } else if (insideClass && line.trim().startsWith("def ")) {
+            methodCount++;
+          } else if (insideClass && line.trim() === "") {
+            insideClass = false;
+          }
+        }
+
+        return {
+          lineCount: lines.length,
+          classCount: classCount,
+          methodCount: methodCount,
+        };
+      } else if (extension === "java") {
+        const lines = content.split("\n");
+        let classCount = 0;
+        let methodCount = 0;
+        let insideClass = false;
+
+        for (const line of lines) {
+          if (line.trim().startsWith("class ")) {
+            classCount++;
+            insideClass = true;
+          } else if (
+            insideClass &&
+            (line.trim().startsWith("public ") ||
+              line.trim().startsWith("private "))
+          ) {
+            methodCount++;
+          } else if (insideClass && line.trim() === "}") {
+            insideClass = false;
+          }
+        }
+
+        return {
+          lineCount: lines.length,
+          classCount: classCount,
+          methodCount: methodCount,
+        };
+      } else if (extension === "js") {
+        const lines = content.split("\n");
+        let classCount = 0;
+        let methodCount = 0;
+        let insideClass = false;
+
+        for (const line of lines) {
+          if (line.trim().startsWith("class ")) {
+            classCount++;
+            insideClass = true;
+          } else if (
+            insideClass &&
+            (line.trim().startsWith("constructor(") ||
+              line.trim().startsWith("function "))
+          ) {
+            methodCount++;
+          } else if (insideClass && line.trim() === "}") {
+            insideClass = false;
+          }
+        }
+
+        return {
+          lineCount: lines.length,
+          classCount: classCount,
+          methodCount: methodCount,
+        };
+      }
+
+      return {
+        lineCount: 0,
+        classCount: 0,
+        methodCount: 0,
+      };
+    } catch (error) {
+      console.error(`Error reading file: ${filePath}`, error);
+      return {
+        lineCount: 0,
+        classCount: 0,
+        methodCount: 0,
+      };
     }
+  }
+
+  try {
+    const files = await fs.promises.readdir(dirPath);
 
     for (const file of files) {
       const filePath = path.join(dirPath, file);
-      const stats = fs.statSync(filePath);
+      const stats = await fs.promises.stat(filePath);
       const createdTime = stats.birthtime;
       const updatedTime = stats.mtime;
       const filename = path.basename(file, path.extname(file));
       const extension = path.extname(file).slice(1);
+
+      let fileObj;
 
       if (["png", "jpg", "gif"].includes(extension)) {
         const imageSize = getImageSize(filePath);
@@ -336,7 +354,7 @@ function updateFileList(dirPath) {
           imageSize
         );
       } else if (extension === "txt") {
-        const textStats = getTextFileStats(filePath);
+        const textStats = await getTextFileStats(filePath);
         fileObj = new TextFile(
           filename,
           extension,
@@ -347,7 +365,7 @@ function updateFileList(dirPath) {
           textStats.charCount
         );
       } else if (["py", "java", "js"].includes(extension)) {
-        const programStats = getProgramFileStats(filePath, extension);
+        const programStats = await getProgramFileStats(filePath, extension);
         fileObj = new ProgramFile(
           filename,
           extension,
@@ -363,25 +381,28 @@ function updateFileList(dirPath) {
 
       snapshot.addFile(fileObj);
     }
-  });
-  //snapshot.status();
+  } catch (error) {
+    console.error("Error updating file list:", error);
+  }
 }
 
 const directoryToWatch = "../files";
 let isUpdating = false; //  prevent multiple updates in a short time
 
-fs.watch(directoryToWatch, (eventType, filename) => {
+fs.watch(directoryToWatch, async (eventType, filename) => {
   if (filename && !isUpdating) {
     isUpdating = true;
-    //console.log(`Change detected: ${filename}`);
-    setTimeout(() => {
-      updateFileList(directoryToWatch);
+    console.log(`Change detected: ${filename}`);
+    try {
+      await updateFileList(directoryToWatch);
+      console.log("File list updated");
+    } catch (error) {
+      console.error("Error updating file list:", error);
+    } finally {
       isUpdating = false;
-    }, 1000);
+    }
   }
 });
-
-// updateFileList(directoryToWatch);
 
 function showMenu() {
   let isUserSelectedOption3 = false;
@@ -393,7 +414,7 @@ function showMenu() {
 
   rl.question("Select an option: ", (option) => {
     if (option === "1") {
-      snapshot.commit();
+      snapshot.commit(directoryToWatch);
       showMenu();
     } else if (option === "2") {
       console.log("Files in directory:", fs.readdirSync(directoryToWatch));
@@ -402,13 +423,7 @@ function showMenu() {
         showMenu();
       });
     } else if (option === "3") {
-      // if (isUpdating) {
-      //   isUpdating = false; // Enable automatic updates for "Status" option
-      //   updateFileList(directoryToWatch);
-      // }
-      // snapshot.status();
-      // showMenu();
-      isUserSelectedOption3 = true; // Set the variable when user selects option 3
+      isUserSelectedOption3 = true; // Set the variable when the user selects option 3
       snapshot.status(isUserSelectedOption3);
       showMenu();
     } else if (option === "4") {

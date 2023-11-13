@@ -95,14 +95,25 @@ class Snapshot {
   }
 
   addFile(file) {
-    this.files.push(file);
+    // Check if the file already exists and update it, or add it if it's new
+    const existingFileIndex = this.files.findIndex(
+      (f) => f.filename === file.filename && f.extension === file.extension
+    );
+
+    if (existingFileIndex !== -1) {
+      // File exists, update it
+      this.files[existingFileIndex] = file;
+    } else {
+      // File is new, add it
+      this.files.push(file);
+    }
   }
 
-  commit(directoryToWatch) {
+  async commit(directoryToWatch) {
     this.snapshotTime = new Date();
     this.snapshotFiles = fs.readdirSync(directoryToWatch);
     console.log(`Created snapshot at: ${this.snapshotTime}`);
-    updateFileList(directoryToWatch);
+    await updateFileList(directoryToWatch); // Fix: use await here
   }
 
   info(filename) {
@@ -239,87 +250,35 @@ async function updateFileList(dirPath) {
   async function getProgramFileStats(filePath, extension) {
     try {
       const content = await fs.promises.readFile(filePath, "utf8");
+      const lines = content.split("\n");
+      let classCount = 0;
+      let methodCount = 0;
+      let insideClass = false;
 
-      if (extension === "py") {
-        const lines = content.split("\n");
-        let classCount = 0;
-        let methodCount = 0;
-        let insideClass = false;
+      const methodDeclarationRegex =
+        /^\s*(async\s+)?(function\s+\w+\s*\(.*\)|\w+\s*\(.*\)\s*{|\w+\s*\(.*\)\s*=>)/;
 
-        for (const line of lines) {
-          if (line.trim().startsWith("class ")) {
-            classCount++;
-            insideClass = true;
-          } else if (insideClass && line.trim().startsWith("def ")) {
-            methodCount++;
-          } else if (insideClass && line.trim() === "") {
-            insideClass = false;
-          }
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+
+        // Check for class declarations
+        if (trimmedLine.startsWith("class ")) {
+          classCount++;
+          insideClass = true;
+        } else if (insideClass && trimmedLine === "}") {
+          insideClass = false;
         }
 
-        return {
-          lineCount: lines.length,
-          classCount: classCount,
-          methodCount: methodCount,
-        };
-      } else if (extension === "java") {
-        const lines = content.split("\n");
-        let classCount = 0;
-        let methodCount = 0;
-        let insideClass = false;
-
-        for (const line of lines) {
-          if (line.trim().startsWith("class ")) {
-            classCount++;
-            insideClass = true;
-          } else if (
-            insideClass &&
-            (line.trim().startsWith("public ") ||
-              line.trim().startsWith("private "))
-          ) {
-            methodCount++;
-          } else if (insideClass && line.trim() === "}") {
-            insideClass = false;
-          }
+        // Check for method declarations using regex
+        if (insideClass && methodDeclarationRegex.test(trimmedLine)) {
+          methodCount++;
         }
-
-        return {
-          lineCount: lines.length,
-          classCount: classCount,
-          methodCount: methodCount,
-        };
-      } else if (extension === "js") {
-        const lines = content.split("\n");
-        let classCount = 0;
-        let methodCount = 0;
-        let insideClass = false;
-
-        for (const line of lines) {
-          if (line.trim().startsWith("class ")) {
-            classCount++;
-            insideClass = true;
-          } else if (
-            insideClass &&
-            (line.trim().startsWith("constructor(") ||
-              line.trim().startsWith("function "))
-          ) {
-            methodCount++;
-          } else if (insideClass && line.trim() === "}") {
-            insideClass = false;
-          }
-        }
-
-        return {
-          lineCount: lines.length,
-          classCount: classCount,
-          methodCount: methodCount,
-        };
       }
 
       return {
-        lineCount: 0,
-        classCount: 0,
-        methodCount: 0,
+        lineCount: lines.length,
+        classCount: classCount,
+        methodCount: methodCount,
       };
     } catch (error) {
       console.error(`Error reading file: ${filePath}`, error);
@@ -400,6 +359,7 @@ fs.watch(directoryToWatch, async (eventType, filename) => {
       console.error("Error updating file list:", error);
     } finally {
       isUpdating = false;
+      showMenu();
     }
   }
 });
@@ -423,7 +383,7 @@ function showMenu() {
         showMenu();
       });
     } else if (option === "3") {
-      isUserSelectedOption3 = true; // Set the variable when the user selects option 3
+      isUserSelectedOption3 = true;
       snapshot.status(isUserSelectedOption3);
       showMenu();
     } else if (option === "4") {
@@ -434,5 +394,5 @@ function showMenu() {
     }
   });
 }
-
+module.exports = updateFileList;
 showMenu();

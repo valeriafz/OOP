@@ -82,7 +82,7 @@ class ProgramFile extends File {
     super.info();
     console.log(`Line Count: ${this.lineCount}`);
     console.log(`Class Count: ${this.classCount}`);
-    console.log(`Method Count: ${this.methodCount}`);
+    console.log(`Functions Count: ${this.methodCount}`);
   }
 }
 

@@ -12,13 +12,13 @@ class Node<T> {
 
 class LinkedListStack<T> implements StackInterface<T> {
   private top: Node<T> | null = null;
-  private size: number = 0;
+  private stackSize: number = 0;
 
   push(item: T): void {
     const newNode = new Node(item);
     newNode.next = this.top;
     this.top = newNode;
-    this.size++;
+    this.stackSize++;
   }
 
   pop(): T | string {
@@ -27,7 +27,7 @@ class LinkedListStack<T> implements StackInterface<T> {
     }
     const poppedItem = this.top!.data;
     this.top = this.top!.next;
-    this.size--;
+    this.stackSize--;
     return poppedItem;
   }
 
@@ -39,16 +39,16 @@ class LinkedListStack<T> implements StackInterface<T> {
   }
 
   isEmpty(): boolean {
-    return this.size === 0;
+    return this.stackSize === 0;
   }
 
   size(): number {
-    return this.size;
+    return this.stackSize;
   }
 
   clear(): void {
     this.top = null;
-    this.size = 0;
+    this.stackSize = 0;
   }
 }
 

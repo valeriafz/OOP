@@ -6,8 +6,9 @@ const arrayStack = new ArrayStack<number>();
 arrayStack.push(1);
 arrayStack.push(2);
 arrayStack.push(3);
-console.log(arrayStack.pop()); // 3
-console.log(arrayStack.peek()); // 2
+console.log(`Your stack looks like this: ${arrayStack}`);
+console.log(arrayStack.pop());
+console.log(arrayStack.peek());
 
 const linkedListStack = new LinkedListStack<number>();
 linkedListStack.push(4);

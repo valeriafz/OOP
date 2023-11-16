@@ -50,6 +50,16 @@ class LinkedListStack<T> implements StackInterface<T> {
     this.top = null;
     this.stackSize = 0;
   }
+
+  toArray(): T[] {
+    const result: T[] = [];
+    let current = this.top;
+    while (current !== null) {
+      result.push(current.data);
+      current = current.next;
+    }
+    return result;
+  }
 }
 
 export default LinkedListStack;

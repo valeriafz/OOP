@@ -18,20 +18,19 @@ const addElements = function () {
   }
 
   console.log("This is your array:");
-  console.log("Array Stack:", arrayStack);
-  console.log("Linked List Stack:", linkedListStack);
-  console.log("Object Stack:", objectStack);
 };
-
 addElements(1, 2, 3, 4);
 
 console.log("Array Stack Before Pop:", arrayStack);
 arrayStack.pop();
 console.log("Array Stack After Pop:", arrayStack);
-console.log("Array Stack Peek:", arrayStack.peek());
 
-console.log("Linked List Stack Peek:", linkedListStack.peek());
+console.log("Linked List Before Pop:", linkedListStack);
 linkedListStack.pop();
+console.log("Linked List After Pop:", linkedListStack);
+console.log("Linked List Stack Peek:", linkedListStack.peek());
 
-console.log("Object Stack Peek:", objectStack.peek());
+console.log("Object Stack Before Pop:", arrayStack);
 objectStack.pop();
+console.log("Object Stack After Pop:", arrayStack);
+console.log("Object Stack Peek:", objectStack.peek());

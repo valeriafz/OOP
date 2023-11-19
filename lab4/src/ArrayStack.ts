@@ -32,10 +32,6 @@ class ArrayStack<T> implements StackInterface<T> {
   clear(): void {
     this.items = [];
   }
-
-  toArray(): T[] {
-    return [...this.items];
-  }
 }
 
 export default ArrayStack;

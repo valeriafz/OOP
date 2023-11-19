@@ -30,7 +30,7 @@ linkedListStack.pop();
 console.log("Linked List After Pop:", linkedListStack);
 console.log("Linked List Stack Peek:", linkedListStack.peek());
 
-console.log("Object Stack Before Pop:", arrayStack);
+console.log("Object Stack Before Pop:", objectStack);
 objectStack.pop();
-console.log("Object Stack After Pop:", arrayStack);
+console.log("Object Stack After Pop:", objectStack);
 console.log("Object Stack Peek:", objectStack.peek());

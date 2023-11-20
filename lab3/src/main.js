@@ -51,8 +51,7 @@ function showMenu() {
         snapshot.info(filename);
         break;
       case "3":
-        isUserSelectedOption3 = true;
-        snapshot.status(isUserSelectedOption3);
+        snapshot.status(true);
         break;
       case "4":
         rl.close();

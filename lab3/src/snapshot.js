@@ -11,16 +11,13 @@ class Snapshot {
   }
 
   addFile(file) {
-    // Check if the file already exists and update it, or add it if it's new
     const existingFileIndex = this.files.findIndex(
       (f) => f.filename === file.filename && f.extension === file.extension
     );
 
     if (existingFileIndex !== -1) {
-      // File exists, update it
       this.files[existingFileIndex] = file;
     } else {
-      // File is new, add it
       this.files.push(file);
     }
   }
@@ -29,7 +26,7 @@ class Snapshot {
     this.snapshotTime = new Date();
     this.snapshotFiles = fs.readdirSync(this.directoryToWatch);
     console.log(`Created snapshot at: ${this.snapshotTime}`);
-    let files = await updateFileList(this.directoryToWatch); // Fix: use await here
+    let files = await updateFileList(this.directoryToWatch);
     files.forEach((file) => {
       this.addFile(file);
     });

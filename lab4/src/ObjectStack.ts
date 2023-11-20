@@ -38,14 +38,6 @@ class ObjectStack<T> implements StackInterface<T> {
     this.stack = {};
     this.stackSize = 0;
   }
-
-  toArray(): T[] {
-    const result: T[] = [];
-    for (let i = 0; i < this.stackSize; i++) {
-      result.push(this.stack[i]);
-    }
-    return result;
-  }
 }
 
 export default ObjectStack;

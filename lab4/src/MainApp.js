@@ -9,7 +9,7 @@ var arrayStack = new ArrayStack_1.default();
 var linkedListStack = new LinkedListStack_1.default();
 var objectStack = new ObjectStack_1.default();
 
-const addElements = function () {
+const addElements = () => {
   for (let i = 0; i < arguments.length; i++) {
     const item = arguments[i];
     arrayStack.push(item);
@@ -24,6 +24,7 @@ addElements(1, 2, 3, 4);
 console.log("Array Stack Before Pop:", arrayStack);
 arrayStack.pop();
 console.log("Array Stack After Pop:", arrayStack);
+console.log("Array Stack Peek:", arrayStack.peek());
 
 console.log("Linked List Before Pop:", linkedListStack);
 linkedListStack.pop();

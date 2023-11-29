@@ -4,7 +4,8 @@ These are some laboratory works done during the course of Object Oriented Progra
 # Lab contents
 lab1 - just a class, as an introduction into oop;
 lab2 - an university management process via the terminal, which allows users to perform the following actions: 
-Faculty Operations:
+
+    Faculty Operations:
     1. Create and assign a student to a faculty
     2. Graduate a student from a faculty
     3. Display current enrolled students

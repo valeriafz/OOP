@@ -1,57 +1,39 @@
+
 # Creational Design Patterns in JavaScript
 
 ## Project Overview
 
-This project demonstrates my implementation of Creational Design Patterns in JavaScript. The design patterns showcased are:
+This project demonstrates Creational Design Patterns, focusing on how object creation can be managed through:
 
-- Singleton
-- Factory Method
-- Builder
-
-Each pattern is implemented within the context of a very basic e-commerce domain, involving entities such as Product, User, and Admin. The goal of this project is to illustrate how different object creation mechanisms can be used effectively.
+- **Singleton**: Restricts a class to a single instance.
+- **Factory Method**: Provides a way to create objects without specifying the exact class.
+- **Builder**: Constructs complex objects step-by-step with a flexible configuration.
 
 ## Domain Structure
 
-The project is divided into two main folders:
+The project is organized into:
 
-- `client/`: Contains the entry point for the project where the patterns are demonstrated.
-- `domain/`: Contains the core logic, divided into two subfolders:
-  - `factory/`: Holds the files responsible for implementing the various creational design patterns.
-  - `models/`: Contains the core entity classes such as Product and User.
+- **`client/`**: Entry point to run the project.
+- **`domain/`**: Core logic with two subfolders:
+  - **`factory/`**: Implements the design patterns.
+  - **`models/`**: Contains main entity classes like Product and User.
 
-## Project Structure
-
-```bash
-/client
-  main.js           # Entry point to run the project
-
-/domain
-  /factory
-    AdminSingleton.js  # Singleton pattern for Admin instance
-    ProductFactory.js  # Factory Method pattern for creating products
-    UserBuilder.js     # Builder pattern for creating User profiles
-  /models
-    Product.js         # Product class (model)
-    User.js           # User class (model)
-```
+---
 
 ## Creational Design Patterns
 
 ### 1. Singleton Pattern
 
-File: `domain/factory/AdminSingleton.js`
+The **Singleton Pattern** limits a class to a single instance. Here, it ensures only one Admin instance is created across the app.
 
-The Singleton Pattern ensures that a class has only one instance and provides a global point of access to that instance. In this project, the Admin class follows the Singleton pattern to ensure there is only one admin instance across the application.
+#### Core Code Snippet
 
 ```javascript
 class Admin {
   constructor(name) {
-    if (Admin.instance) {
-      return Admin.instance;
-    }
+    if (Admin.instance) return Admin.instance;
     this.name = name;
     Admin.instance = this;
-    return this;
   }
 
   getDetails() {
@@ -59,28 +41,29 @@ class Admin {
   }
 }
 
-module.exports = Admin;
 ```
 
-#### Usage Example
+If `Admin.instance` exists, the constructor returns it, ensuring only one instance. If the instance doesn’t exist, it’s set with `this.name`. It sets global access, as the same Admin instance is reused throughout the app.
 
-In the client code, I have attempted to create two Admin instances, but both admin1 and admin2 refer to the same instance.
+#### Usage Example
 
 ```javascript
 const admin1 = new Admin("Alice");
 const admin2 = new Admin("Bob");
 
-console.log(admin1.getDetails()); // Output: Admin: Alice
-console.log(admin2.getDetails()); // Output: Admin: Alice
+console.log(admin1.getDetails()); // Admin: Alice
+console.log(admin2.getDetails()); // Admin: Alice
 ```
 
-Even though I have tried to create admin2 with the name Bob, the Singleton pattern ensures that only one Admin instance (the one with the name Alice) exists.
+Even though `admin2` is instantiated with "Bob," it returns the same instance created with "Alice."
+
+---
 
 ### 2. Factory Method Pattern
 
-File: `domain/factory/ProductFactory.js`
+The **Factory Method Pattern** defines an interface for creating objects but lets subclasses or factories decide the specific type. Here, `ProductFactory` generates Product objects based on a provided type.
 
-The Factory Method Pattern defines an interface for creating objects but allows subclasses or factories to alter the type of objects that will be created. Here, the ProductFactory class dynamically creates Product objects based on product type.
+#### Core Code Snippet
 
 ```javascript
 class ProductFactory {
@@ -89,27 +72,30 @@ class ProductFactory {
   }
 }
 
-module.exports = ProductFactory;
 ```
 
-#### Usage Example
+A dynamic creation takes place, as `ProductFactory` takes parameters (`type`, `name`, `price`) to create a Product without modifying the Product class. This method allows the creation of varied products with different specifications, streamlining instantiation, making it reusable.
 
-In the client code, different types of products can be created without modifying the underlying Product class directly.
+#### Usage Example
 
 ```javascript
 const productFactory = new ProductFactory();
 const laptop = productFactory.createProduct("Electronics", "Laptop", 1200);
 const sofa = productFactory.createProduct("Furniture", "Sofa", 500);
 
-console.log(laptop.getDetails()); // Output: Electronics - Laptop: $1200
-console.log(sofa.getDetails()); // Output: Furniture - Sofa: $500
+console.log(laptop.getDetails()); // Electronics - Laptop: $1200
+console.log(sofa.getDetails());   // Furniture - Sofa: $500
 ```
+
+By specifying types, products are created dynamically without needing to modify the base `Product` class.
+
+---
 
 ### 3. Builder Pattern
 
-File: `domain/factory/UserBuilder.js`
+The **Builder Pattern** allows creating objects with complex parameters step-by-step, allowing only the desired properties to be set.
 
-The Builder Pattern provides a way to construct complex objects step by step. In this project, I have used the builder pattern to construct a User object with multiple optional attributes (name, age, email, address).
+#### Core Code Snippet
 
 ```javascript
 class UserBuilder {
@@ -120,37 +106,21 @@ class UserBuilder {
     this.address = "";
   }
 
-  setName(name) {
-    this.name = name;
-    return this;
-  }
-
-  setAge(age) {
-    this.age = age;
-    return this;
-  }
-
-  setEmail(email) {
-    this.email = email;
-    return this;
-  }
-
-  setAddress(address) {
-    this.address = address;
-    return this;
-  }
+  setName(name) { this.name = name; return this; }
+  setAge(age) { this.age = age; return this; }
+  setEmail(email) { this.email = email; return this; }
+  setAddress(address) { this.address = address; return this; }
 
   build() {
     return new User(this.name, this.age, this.email, this.address);
   }
 }
 
-module.exports = UserBuilder;
 ```
 
-#### Usage Example
+The code consists of chain setters, meaning methods like `setName` and `setEmail` set individual properties and return the builder instance, enabling chaining. Finally, `build()` finalizes the configuration, returning a complete User object with the selected properties.
 
-The builder pattern allows for flexible construction of User objects, enabling different configurations based on the user's needs.
+#### Usage Example
 
 ```javascript
 const userBuilder = new UserBuilder();
@@ -161,8 +131,11 @@ const user = userBuilder
   .setAddress("123 Main St")
   .build();
 
-console.log(user.getDetails()); // Output: User: John Doe, Age: 30, Email: john@example.com, Address: 123 Main St
+console.log(user.getDetails()); // User: John Doe, Age: 30, Email: john@example.com, Address: 123 Main St
 ```
+
+With the builder pattern, different User configurations can be created as needed, making it flexible for optional attributes. It is more complex as Factory Method, as each chain setter is set sepparately.
+
 
 ## Running the Project
 

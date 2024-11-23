@@ -22,5 +22,7 @@ lab3 - a terminal clone of Git, which allows users to manage the changes, status
 
 lab4 - a deeper look into polymorphism and inheritance, by using 3 different implementations of stacks, linked through the same typescript interface.
 
+TMPS folders explore the implementation of SOLID principles and Design Patterns (Structural, Creational, Behavioural) in a simple e-commerce shop project, for better flexibility and consistent code. 
+
 # Running requirement
 installation of node is required.

@@ -147,12 +147,9 @@ Bob received: Price drop on Cool Widget!
 
 ### **Command Pattern Output**
 
-In the main application, we simulate adding and removing products with undo functionality.
+In the main application, I simulate adding and removing products with undo functionality. The admin is an extension of the Singleton pattern from lab 1, using Decorator to extend its capabilities (in my case, adding and removing products).
 
 ```javascript
-const admin = { products: [] }; // Admin with a product inventory
-
-// Create commands for adding and removing products
 const addProduct1 = new AddProductCommand(admin, {
   id: 1,
   name: "Awesome Gadget",
